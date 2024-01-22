@@ -1,12 +1,19 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useRef, useState } from "react";
 import { debounce } from "lodash";
 import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
+import va from "@vercel/analytics";
+import { toast } from "sonner";
+import { useCompletion } from "ai/react";
+
 import { Button } from "./ui/button";
+import SlashCommand from "./extensions/slash-command";
+import { getPrevText } from "@/lib/editor";
 
 interface TipTapProps {
   onConvexUpdate: (value: string) => void;
@@ -19,23 +26,118 @@ const TipTap = ({
   initialContent,
   isEditable,
 }: TipTapProps) => {
+  const [hydrated, setHydrated] = useState(false);
+
+  const content = initialContent ? JSON.parse(initialContent) : undefined;
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        horizontalRule: false,
+        dropcursor: {
+          color: "#DBEAFE",
+          width: 4,
+        },
+        gapcursor: false,
+      }),
       Placeholder.configure({
         placeholder: `Let's start writing something amazing...`,
       }),
       CharacterCount.configure({}),
+      SlashCommand,
     ],
     content: initialContent ? JSON.parse(initialContent) : undefined,
     autofocus: "end", // the default cursor position is at the end of the text
     editable: isEditable,
+    onUpdate: (e) => {
+      const selection = e.editor.state.selection;
+      const lastTwo = getPrevText(e.editor, {
+        chars: 2,
+      });
+      if (lastTwo === "++" && !isLoading) {
+        e.editor.commands.deleteRange({
+          from: selection.from - 2,
+          to: selection.from,
+        });
+        complete(
+          getPrevText(e.editor, {
+            chars: 5000,
+          }),
+        );
+        // complete(e.editor.storage.markdown.getMarkdown());
+        va.track("Autocomplete Shortcut Used");
+      } else {
+        debouncedAutoSave();
+      }
+    },
     editorProps: {
       attributes: {
         class: "",
       },
     },
   });
+
+  const { complete, completion, isLoading, stop } = useCompletion({
+    id: "novel",
+    api: "/api/generate",
+    onFinish: (_prompt, completion) => {
+      editor?.commands.setTextSelection({
+        from: editor.state.selection.from - completion.length,
+        to: editor.state.selection.from,
+      });
+    },
+    onError: (err) => {
+      toast.error(err.message);
+      if (err.message === "You have reached your request limit for the day.") {
+        va.track("Rate Limit Reached");
+      }
+    },
+  });
+
+  const prev = useRef("");
+
+  // Insert chunks of the generated text
+  useEffect(() => {
+    const diff = completion.slice(prev.current.length);
+    prev.current = completion;
+    editor?.commands.insertContent(diff);
+  }, [isLoading, editor, completion]);
+
+  useEffect(() => {
+    // if user presses escape or cmd + z and it's loading,
+    // stop the request, delete the completion, and insert back the "++"
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || (e.metaKey && e.key === "z")) {
+        stop();
+        if (e.key === "Escape") {
+          editor?.commands.deleteRange({
+            from: editor.state.selection.from - completion.length,
+            to: editor.state.selection.from,
+          });
+        }
+        editor?.commands.insertContent("++");
+      }
+    };
+    const mousedownHandler = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      stop();
+      if (window.confirm("AI writing paused. Continue?")) {
+        complete(editor?.getText() || "");
+      }
+    };
+    if (isLoading) {
+      document.addEventListener("keydown", onKeyDown);
+      window.addEventListener("mousedown", mousedownHandler);
+    } else {
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("mousedown", mousedownHandler);
+    }
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("mousedown", mousedownHandler);
+    };
+  }, [stop, isLoading, editor, complete, completion.length]);
 
   // Create a debounced auto-save function
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,6 +175,32 @@ const TipTap = ({
     }
   };
 
+  // Hydrate the editor with the initial content when available
+  useEffect(() => {
+    if (editor && content && !hydrated) {
+      editor.commands.setContent(content);
+      setHydrated(true);
+    }
+  }, [editor, content, hydrated]);
+
+  // Update the virtual database whenever the editor content changes
+  // useEffect(() => {
+  //   if (editor) {
+  //     const onUpdate = () => {
+  //       onConvexUpdate(JSON.stringify(editor.getHTML()));
+  //     };
+
+  //     // Listen for transactions that could change the editor content
+  //     editor.on('transaction', onUpdate);
+
+  //     // Cleanup function to unsubscribe from the editor updates
+  //     return () => {
+  //       editor.off('transaction', onUpdate);
+  //     };
+  //   }
+  // }, [editor, onConvexUpdate]);
+
+
   return (
     <div
       className={`editor ${
@@ -85,7 +213,9 @@ const TipTap = ({
           {editor?.storage.characterCount.words()} words written...
         </span>
         <div className="pt-4">
-          <Button onClick={saveContent} className="px-6">Save</Button>
+          <Button onClick={saveContent} className="px-6">
+            Save
+          </Button>
         </div>
       </>
     </div>
