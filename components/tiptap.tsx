@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { debounce } from "lodash";
-import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
+import { useEditor, EditorContent, BubbleMenu, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
@@ -19,12 +19,14 @@ interface TipTapProps {
   onConvexUpdate: (value: string) => void;
   initialContent?: string;
   isEditable?: boolean;
+  onEditorReady?: (editor: Editor) => void; // Add this line
 }
 
 const TipTap = ({
   onConvexUpdate,
   initialContent,
   isEditable,
+  onEditorReady,
 }: TipTapProps) => {
   const [hydrated, setHydrated] = useState(false);
 
@@ -168,12 +170,12 @@ const TipTap = ({
     };
   }, [editor, debouncedAutoSave]);
 
-  // Function to manually save content
-  const saveContent = () => {
-    if (editor) {
-      onConvexUpdate(JSON.stringify(editor.getHTML()));
+  // When the editor is ready, call onEditorReady with the editor instance
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(editor);
     }
-  };
+  }, [editor, onEditorReady]);
 
   // Hydrate the editor with the initial content when available
   useEffect(() => {
@@ -182,24 +184,6 @@ const TipTap = ({
       setHydrated(true);
     }
   }, [editor, content, hydrated]);
-
-  // Update the virtual database whenever the editor content changes
-  // useEffect(() => {
-  //   if (editor) {
-  //     const onUpdate = () => {
-  //       onConvexUpdate(JSON.stringify(editor.getHTML()));
-  //     };
-
-  //     // Listen for transactions that could change the editor content
-  //     editor.on('transaction', onUpdate);
-
-  //     // Cleanup function to unsubscribe from the editor updates
-  //     return () => {
-  //       editor.off('transaction', onUpdate);
-  //     };
-  //   }
-  // }, [editor, onConvexUpdate]);
-
 
   return (
     <div
@@ -212,11 +196,6 @@ const TipTap = ({
         <span className="text-muted-foreground pt-4">
           {editor?.storage.characterCount.words()} words written...
         </span>
-        <div className="pt-4">
-          <Button onClick={saveContent} className="px-6">
-            Save
-          </Button>
-        </div>
       </>
     </div>
   );
