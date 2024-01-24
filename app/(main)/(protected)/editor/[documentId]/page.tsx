@@ -8,6 +8,7 @@ import { Editor } from "@tiptap/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface DocumentIdPageProps {
   params: {
@@ -19,7 +20,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   const editorRef = useRef<Editor | null>(null); //keep a reference to the editor instance.
 
   // Introduce new state to determine if the saveContent has been triggered
-  const [isSaved, setIsSaved] = useState(false);
+  // const [isSaved, setIsSaved] = useState(false);
 
   const TipTap = useMemo(
     () => dynamic(() => import("@/components/tiptap"), { ssr: false }),
@@ -32,6 +33,15 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
 
   const update = useMutation(api.documents.update);
 
+  // Function to count words in the content
+  const countWords = (content: string): number => {
+    const text = content.replace(/<[^>]*>/g, ""); // Remove HTML tags
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length; // Split by whitespace and filter out empty strings
+  };
+
   function onConvexUpdate(content: string) {
     update({
       id: params.documentId,
@@ -42,8 +52,17 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   // Function to manually save content
   const saveContent = () => {
     if (editorRef.current) {
-      onConvexUpdate(JSON.stringify(editorRef.current.getHTML()));
-      setIsSaved(true); // Set isSaved to true to hide the button and show the div
+      const content = editorRef.current.getHTML();
+      const wordCount = countWords(content);
+      if (wordCount >= 100) {
+        onConvexUpdate(JSON.stringify(content));
+        update({
+          id: params.documentId,
+          isChecked: true,
+        })
+      } else {
+        toast.error("You need at least 100 words to submit for feedback."); // Fire the toast with the message
+      }
     }
   };
 
@@ -69,7 +88,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
           isEditable
           onEditorReady={handleEditorReady}
         />
-        {!isSaved ? (
+        {!document.isChecked ? (
           <Button onClick={saveContent}>Submit for feedback</Button>
         ) : (
           <div className="flex flex-col space-y-4 py-4">
@@ -77,7 +96,9 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
               <h1 className="text-xl font-semibold tracking-tight">
                 Your Score: 7
               </h1>
-              <p className="text-sm">Click the buttons below for a detailed feedback:</p>
+              <p className="text-sm">
+                Click the buttons below for a detailed feedback:
+              </p>
             </div>
             <div className="flex space-x-4">
               <Button>Show Feedback</Button>
