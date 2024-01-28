@@ -35,6 +35,7 @@ export const update = mutation({
     title: v.optional(v.string()),
     content: v.optional(v.string()),
     isChecked: v.optional(v.boolean()),
+    feedback: v.optional(v.string()),
     // isRechecked: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {

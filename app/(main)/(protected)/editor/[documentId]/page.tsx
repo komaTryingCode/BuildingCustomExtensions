@@ -2,13 +2,14 @@
 
 import { useMutation, useQuery } from "convex/react";
 import dynamic from "next/dynamic";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { Editor } from "@tiptap/react";
 
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import ShowFeedback from "@/components/show-feedback";
 
 interface DocumentIdPageProps {
   params: {
@@ -18,9 +19,6 @@ interface DocumentIdPageProps {
 
 const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   const editorRef = useRef<Editor | null>(null); //keep a reference to the editor instance.
-
-  // Introduce new state to determine if the saveContent has been triggered
-  // const [isSaved, setIsSaved] = useState(false);
 
   const TipTap = useMemo(
     () => dynamic(() => import("@/components/tiptap"), { ssr: false }),
@@ -59,7 +57,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
         update({
           id: params.documentId,
           isChecked: true,
-        })
+        });
       } else {
         toast.error("You need at least 100 words to submit for feedback."); // Fire the toast with the message
       }
@@ -91,7 +89,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
         {!document.isChecked ? (
           <Button onClick={saveContent}>Submit for feedback</Button>
         ) : (
-          <div className="flex flex-col space-y-4 py-4">
+          <div>
             <div className="flex flex-col space-y-2 border-b py-2">
               <h1 className="text-xl font-semibold tracking-tight">
                 Your Score: 7
@@ -100,8 +98,8 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
                 Click the buttons below for a detailed feedback:
               </p>
             </div>
-            <div className="flex space-x-4">
-              <Button>Show Feedback</Button>
+            <div className="flex items-center space-x-4">
+              <ShowFeedback />
               <Button>Show Improved Veresion</Button>
             </div>
           </div>
