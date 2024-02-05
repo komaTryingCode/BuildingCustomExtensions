@@ -10,5 +10,6 @@ export default defineSchema({
         isChecked: v.optional(v.boolean()),
         // isRechecked: v.optional(v.boolean()),
         feedback: v.optional(v.string()),
+        improvedEssay: v.optional(v.string()),
     }).index("by_user", ["userId"]),
 });

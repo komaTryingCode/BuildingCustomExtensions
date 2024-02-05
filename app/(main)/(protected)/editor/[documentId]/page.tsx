@@ -10,6 +10,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ShowFeedback from "@/components/show-feedback";
+import ShowImprovedEssay from "@/components/show-improved-essay";
 
 interface DocumentIdPageProps {
   params: {
@@ -100,7 +101,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
             </div>
             <div className="flex items-center space-x-4">
               <ShowFeedback />
-              <Button>Show Improved Veresion</Button>
+              <ShowImprovedEssay />
             </div>
           </div>
         )}
