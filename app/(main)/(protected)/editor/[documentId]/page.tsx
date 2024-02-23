@@ -1,16 +1,18 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
+import { useAction } from "convex/react";
 import dynamic from "next/dynamic";
 import { useMemo, useRef } from "react";
 import { Editor } from "@tiptap/react";
+import { toast } from "sonner";
 
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import ShowFeedback from "@/components/show-feedback";
 import ShowImprovedEssay from "@/components/show-improved-essay";
+import DisplayScore from "@/components/display-score";
 
 interface DocumentIdPageProps {
   params: {
@@ -31,6 +33,9 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   });
 
   const update = useMutation(api.documents.update);
+
+  // convex action call:
+  const assessEssay = useAction(api.assessEssay.giveAssessment);
 
   // Function to count words in the content
   const countWords = (content: string): number => {
@@ -55,6 +60,14 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
       const wordCount = countWords(content);
       if (wordCount >= 100) {
         onConvexUpdate(JSON.stringify(content));
+        // Let's try AI assessment here
+        if (document && document.title) {
+          assessEssay({
+            title: document.title,
+            body: content,
+            id: params.documentId,
+          });
+        }
         update({
           id: params.documentId,
           isChecked: true,
@@ -87,18 +100,22 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
           isEditable
           onEditorReady={handleEditorReady}
         />
+      </div>
+      <div className="max-w-3xl mx-auto w-full pt-8">
         {!document.isChecked ? (
           <Button onClick={saveContent}>Submit for feedback</Button>
         ) : (
-          <div>
-            <div className="flex flex-col space-y-2 border-b py-2">
-              <h1 className="text-xl font-semibold tracking-tight">
-                Your Score: 7
-              </h1>
-              <p className="text-sm">
-                Click the buttons below for a detailed feedback:
-              </p>
-            </div>
+          <div className="space-y-4">
+            <DisplayScore
+              overallScore={document.overallScore || ""}
+              ccScore={document.ccScore || ""}
+              grScore={document.grScore || ""}
+              lrScore={document.lrScore || ""}
+              trScore={document.trScore || ""}
+            />
+            <p className="text-sm">
+              Click the buttons below for a detailed feedback:
+            </p>
             <div className="flex items-center space-x-4">
               <ShowFeedback />
               <ShowImprovedEssay />
