@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
-import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,79 +35,33 @@ export default function ShowFeedback() {
     documentId: params.documentId as Id<"documents">,
   });
 
-  const update = useMutation(api.documents.update);
+  const [isLoading, setIsLoading] = React.useState(false); // Add this line to define loading state
 
   const [open, setOpen] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  const updateFeedback = React.useCallback(
-    (feedback: string) => {
-      update({
-        id: params.documentId as Id<"documents">,
-        feedback: feedback,
-      });
+  const feedbackSections = [
+    {
+      label: "Task Response",
+      score: document?.trScore,
+      feedback: document?.trScoreFeedback,
     },
-    [update, params.documentId]
-  );
-
-  const [feedback, setFeedback] = React.useState("");
-
-  const { complete, completion, isLoading } = useCompletion({
-    api: "/api/docfeedback",
-
-    onError: (err) => {
-      toast.error(err.message);
+    {
+      label: "Coherence and Cohesion",
+      score: document?.ccScore,
+      feedback: document?.ccScoreFeedback,
     },
-  });
-
-  const handleClick = React.useCallback(
-    async (c: string) => {
-      console.log("handleClick called with:", c);
-      setFeedback(""); // Clear the previous ideas first
-
-      try {
-        const response = await fetch("/api/essayfeedback", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ prompt: c }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to generate feedback");
-        }
-
-        if (!response.body) {
-          throw new Error("No response body");
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullFeedback = ""; // Initialize an empty string to accumulate the feedback
-
-        reader.read().then(function processText({ done, value }) {
-          if (done) {
-            console.log("Stream complete");
-            setFeedback(fullFeedback); // Update the state with the full feedback
-            updateFeedback(fullFeedback); // Update backend with the full feedback
-            return;
-          }
-
-          // Decode the received chunk
-          const chunk = value ? decoder.decode(value, { stream: true }) : "";
-          console.log("Received chunk:", chunk);
-          fullFeedback += chunk; // Accumulate the chunks into fullFeedback
-          setFeedback((prevFeedback) => prevFeedback + chunk); // Update the state with the new chunk
-
-          reader.read().then(processText);
-        });
-      } catch (error) {
-        console.error("Failed to fetch brainstorm ideas: ", error);
-      }
+    {
+      label: "Grammar Range and Accuracy",
+      score: document?.grScore,
+      feedback: document?.grScoreFeedback,
     },
-    [updateFeedback]
-  );
+    {
+      label: "Lexical Resources",
+      score: document?.lrScore,
+      feedback: document?.lrScoreFeedback,
+    },
+  ];
 
   if (document === null) {
     return null;
@@ -121,26 +75,38 @@ export default function ShowFeedback() {
         </SheetTrigger>
         <SheetContent className="w-full container max-w-3xl">
           <SheetHeader>
-            <SheetTitle>Component Title</SheetTitle>
-            <SheetDescription className="grid gap-2 pb-4">
-              Component Description. Lorem ipsum dolor sit amet consectetur.
-              {!document?.feedback && (
-                <Button
-                  onClick={() => handleClick(document?.content || "")}
-                  disabled={isLoading}
-                  className="w-full max-w-fit px-16"
-                >
-                  Generate Feedback
-                </Button>
-              )}
+            <SheetTitle>Assessment Feedback</SheetTitle>
+            <SheetDescription className="flex items-center space-x-2 p-2 border-b">
+              <p className="text-2xl font-semibold text-blue-500">
+                Overall Score:
+              </p>
+              <p className="text-2xl font-semibold text-blue-500">
+                {document?.overallScore}
+              </p>
             </SheetDescription>
           </SheetHeader>
-          <div className="flex items-center p-2 border w-full">
-            {isLoading
-              ? "Loading..."
-              : feedback ||
-                document?.feedback ||
-                "Click the button to generate feedback"}
+          <div className="flex items-center w-full p-2">
+            {isLoading ? (
+              "Loading Skeleton..."
+            ) : (
+              <div>
+                <div className="flex flex-col gap-3">
+                  {feedbackSections.map((section, index) => (
+                    <div key={index} className="flex flex-col gap-2">
+                      <h3 className="text-xl">
+                        {section.label}: {section.score}
+                      </h3>
+                      <p className="text-[18px] font-light">
+                        {section.feedback}
+                      </p>
+                    </div>
+                  ))}
+                  <p className="text-[18px] font-light">
+                    {document?.overallScoreFeedback}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </SheetContent>
       </Sheet>
@@ -152,29 +118,41 @@ export default function ShowFeedback() {
       <DrawerTrigger asChild>
         <Button>Show Feedback</Button>
       </DrawerTrigger>
-      <DrawerContent className="h-full max-h-[70%]">
+      <DrawerContent className="h-full max-h-[80%]">
         <DrawerHeader className="text-left">
-          <DrawerTitle>Component Title</DrawerTitle>
-          <DrawerDescription className="grid gap-2">
-            Component Description. Lorem ipsum dolor sit amet consectetur.
-            {!document?.feedback && (
-              <Button
-                onClick={() => handleClick(document?.content || "")}
-                disabled={isLoading}
-                className="w-full max-w-fit px-16"
-              >
-                Generate Feedback
-              </Button>
-            )}
+          <DrawerTitle>Assessment Feedback</DrawerTitle>
+          <DrawerDescription className="flex items-center space-x-2 p-2 border-b">
+            <p className="text-2xl font-semibold text-blue-500">
+              Overall Score:
+            </p>
+            <p className="text-2xl font-semibold text-blue-500">
+              {document?.overallScore}
+            </p>
           </DrawerDescription>
         </DrawerHeader>
-        <div className="flex items-center p-2 border w-full">
-          {isLoading
-            ? "Loading..."
-            : feedback ||
-              document?.feedback ||
-              "Click the button to generate feedback"}
-        </div>
+        <ScrollArea>
+          <div className="flex items-center w-full p-2">
+            {isLoading ? (
+              "Loading Skeleton..."
+            ) : (
+              <div>
+                <div className="flex flex-col gap-3">
+                  {feedbackSections.map((section, index) => (
+                    <div key={index} className="flex flex-col gap-2">
+                      <h3 className="text-xl">
+                        {section.label}: {section.score}
+                      </h3>
+                      <p className="text-[18px] font-light">{section.feedback}</p>
+                    </div>
+                  ))}
+                  <p className="text-[18px] font-light">
+                    {document?.overallScoreFeedback}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Close</Button>

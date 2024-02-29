@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useAction } from "convex/react";
 import dynamic from "next/dynamic";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import ShowFeedback from "@/components/show-feedback";
 import ShowImprovedEssay from "@/components/show-improved-essay";
 import DisplayScore from "@/components/display-score";
@@ -27,6 +29,8 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
     () => dynamic(() => import("@/components/tiptap"), { ssr: false }),
     []
   ); // TipTap editor fynamically imported using useMemo hook.
+
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const document = useQuery(api.documents.getDocumentById, {
     documentId: params.documentId,
@@ -62,10 +66,13 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
         onConvexUpdate(JSON.stringify(content));
         // Let's try AI assessment here
         if (document && document.title) {
+          setIsLoading(true);
           assessEssay({
             title: document.title,
             body: content,
             id: params.documentId,
+          }).finally(() => {
+            setIsLoading(false); // Reset loading to false when assessment is complete
           });
         }
         update({
@@ -104,14 +111,38 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
       <div className="max-w-3xl mx-auto w-full pt-8">
         {!document.isChecked ? (
           <Button onClick={saveContent}>Submit for feedback</Button>
+        ) : isLoading ? (
+          // Show loading skeletons when isLoading is true
+
+          <div className="space-y-4">
+            <Skeleton className="h-5 w-[30%]" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-5" />
+                <Skeleton className="h-5 w-full" />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-5" />
+                <Skeleton className="h-5 w-full" />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-5" />
+                <Skeleton className="h-5 w-full" />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-5" />
+                <Skeleton className="h-5 w-full" />
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="space-y-4">
             <DisplayScore
-              overallScore={document.overallScore || ""}
-              ccScore={document.ccScore || ""}
-              grScore={document.grScore || ""}
-              lrScore={document.lrScore || ""}
-              trScore={document.trScore || ""}
+              overallScore={document.overallScore || 0}
+              ccScore={document.ccScore || 0}
+              grScore={document.grScore || 0}
+              lrScore={document.lrScore || 0}
+              trScore={document.trScore || 0}
             />
             <p className="text-sm">
               Click the buttons below for a detailed feedback:

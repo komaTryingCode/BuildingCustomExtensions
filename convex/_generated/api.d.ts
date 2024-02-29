@@ -16,6 +16,7 @@ import type {
 } from "convex/server";
 import type * as assessEssay from "../assessEssay.js";
 import type * as documents from "../documents.js";
+import type * as essayFeedback from "../essayFeedback.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -28,6 +29,7 @@ import type * as documents from "../documents.js";
 declare const fullApi: ApiFromModules<{
   assessEssay: typeof assessEssay;
   documents: typeof documents;
+  essayFeedback: typeof essayFeedback;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

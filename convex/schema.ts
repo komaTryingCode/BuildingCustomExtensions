@@ -8,13 +8,17 @@ export default defineSchema({
     content: v.optional(v.string()),
     category: v.optional(v.string()),
     isChecked: v.optional(v.boolean()),
-    // isRechecked: v.optional(v.boolean()),
-    feedback: v.optional(v.string()),
-    improvedEssay: v.optional(v.string()),
-    trScore: v.optional(v.string()), //Task Response Score
-    ccScore: v.optional(v.string()), //Coherence & cohesion Score
-    lrScore: v.optional(v.string()), //Lexical Resources Score
-    grScore: v.optional(v.string()), //Grammar Range & accuracy Score
-    overallScore: v.optional(v.string()), // IELTS Writing band score
+    trScore: v.optional(v.number()), //Task Response Score
+    ccScore: v.optional(v.number()), //Coherence & cohesion Score
+    lrScore: v.optional(v.number()), //Lexical Resources Score
+    grScore: v.optional(v.number()), //Grammar Range & accuracy Score
+    overallScore: v.optional(v.number()), // IELTS Writing band score
+    trScoreFeedback: v.optional(v.string()),
+    ccScoreFeedback: v.optional(v.string()),
+    lrScoreFeedback: v.optional(v.string()),
+    grScoreFeedback: v.optional(v.string()),
+    overallScoreFeedback: v.optional(v.string()),
+    modelEssay: v.optional(v.string()),
+    modelEssayComments: v.optional(v.string()),
   }).index("by_user", ["userId"]),
 });
