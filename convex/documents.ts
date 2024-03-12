@@ -6,6 +6,7 @@ export const createDocument = mutation({
   args: {
     title: v.string(),
     category: v.optional(v.string()),
+    taskType: v.string(),
   },
   handler: async (ctx, args) => {
     // fetching currently logged in user:
@@ -21,6 +22,7 @@ export const createDocument = mutation({
     const document = await ctx.db.insert("documents", {
       title: args.title,
       category: args.category,
+      taskType: args.taskType as "Task One" | "Task Two",
       userId: userId,
     });
 
@@ -91,5 +93,26 @@ export const getDocumentById = query({
     }
 
     return document;
+  },
+});
+
+// Getting all essays for Dashboard analytics
+export const getAllDocuments = query({
+  args: {},
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("You are not authorized to perform this action.");
+    }
+
+    const userId = identity.subject;
+
+    const documents = await ctx.db
+      .query("documents")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    return documents;
   },
 });

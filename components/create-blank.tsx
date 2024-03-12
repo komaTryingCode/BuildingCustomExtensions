@@ -24,6 +24,16 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -97,14 +107,28 @@ export function CreateBlankDocumentBtn() {
 
 function GetTitleForm({ className }: React.ComponentProps<"form">) {
   const [title, setTitle] = React.useState(""); // State to store the input value
+  const [taskType, setTaskType] = React.useState(""); // State to store the selected task type
   const router = useRouter();
   const create = useMutation(api.documents.createDocument);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); // Prevent the default form submission
-    const promise = create({ title: title, category: "Custom task" }).then(
-      (documentId) => router.push(`/editor/${documentId}`)
-    );
+    // Ensure that a taskType is selected before proceeding
+    if (!taskType) {
+      toast.error("Please select a task type.");
+      return;
+    }
+
+    if (!title) {
+      toast.error("Please enter a title.");
+      return;
+    }
+    
+    const promise = create({
+      title: title,
+      category: "Custom task",
+      taskType: taskType,
+    }).then((documentId) => router.push(`/editor/${documentId}`));
 
     toast.promise(promise, {
       loading: "Creating a new document...",
@@ -115,6 +139,10 @@ function GetTitleForm({ className }: React.ComponentProps<"form">) {
 
   function handleTitleChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setTitle(event.target.value); // Update the title state with the input value
+  }
+
+  function handleTaskTypeChange(value: string) {
+    setTaskType(value);
   }
 
   return (
@@ -135,6 +163,24 @@ function GetTitleForm({ className }: React.ComponentProps<"form">) {
           rows={5} // Set the number of rows to define the initial height
           // You can add more attributes as needed
         />
+        <div className="flex items-center justify-between pt-2">
+          <Label className="text-base">
+            Select the writing task:
+          </Label>
+          <Select onValueChange={handleTaskTypeChange}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Select the writing task..." className="text-muted-foreground" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Writing Task Type</SelectLabel>
+                <SelectSeparator />
+                <SelectItem value="Task One">Writing Task One</SelectItem>
+                <SelectItem value="Task Two">Writing Task Two</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <Button type="submit">Create document</Button>
     </form>

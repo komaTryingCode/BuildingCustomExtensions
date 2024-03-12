@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import ShowFeedbackChart from "./charts/show-feedback-chart";
+import { Separator } from "@/components/ui/separator";
 
 export default function ShowFeedback() {
   const params = useParams();
@@ -106,11 +107,13 @@ export default function ShowFeedback() {
                         <h3 className="text-xl">
                           {section.label}: {section.score}
                         </h3>
+                        <Separator />
                         <p className="text-[18px] font-light">
                           {section.feedback}
                         </p>
                       </div>
                     ))}
+                    <Separator />
                     <p className="text-[18px] font-light">
                       {document?.overallScoreFeedback}
                     </p>

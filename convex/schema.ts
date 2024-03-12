@@ -6,6 +6,7 @@ export default defineSchema({
     title: v.string(),
     userId: v.string(),
     content: v.optional(v.string()),
+    taskType: v.union(v.literal("Task One"), v.literal("Task Two")), // task one or task two
     category: v.optional(v.string()),
     isChecked: v.optional(v.boolean()),
     trScore: v.optional(v.number()), //Task Response Score

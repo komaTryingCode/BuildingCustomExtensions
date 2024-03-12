@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ShowFeedback from "@/components/show-feedback";
 import ShowImprovedEssay from "@/components/show-improved-essay";
 import DisplayScore from "@/components/display-score";
+import { ReloadIcon } from "@radix-ui/react-icons";
 
 interface DocumentIdPageProps {
   params: {
@@ -115,7 +116,10 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
           // Show loading skeletons when isLoading is true
 
           <div className="space-y-4">
-            <Skeleton className="h-5 w-[30%]" />
+            <Button disabled>
+              <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+              Assessing your essay...
+            </Button>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col space-y-2">
                 <Skeleton className="h-5" />

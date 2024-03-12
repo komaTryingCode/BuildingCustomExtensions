@@ -48,6 +48,9 @@ export default function ShowImprovedEssay() {
 
   const [selectedScore, setSelectedScore] = React.useState("");
 
+   // Add a state to keep track of regeneration attempts
+   const [regenerateCount, setRegenerateCount] = React.useState(0);
+
   const document = useQuery(api.documents.getDocumentById, {
     documentId: params.documentId as Id<"documents">,
   });
@@ -73,6 +76,7 @@ export default function ShowImprovedEssay() {
         improveToScore: selectedScore,
       }).finally(() => {
         setIsLoading(false); // Reset loading to false when assessment is complete
+        setRegenerateCount(prevCount => prevCount + 1); // Increment the regenerate counter
       });
     }
   };
@@ -163,7 +167,7 @@ export default function ShowImprovedEssay() {
               {document?.modelEssay && !isLoading && (
                 <Button
                   onClick={() => handleClick()}
-                  disabled={isLoading}
+                  disabled={isLoading || regenerateCount >= 2} // Disable after two regenerations
                   className="w-full max-w-fit px-16"
                 >
                   Re-generate Improved Essay
