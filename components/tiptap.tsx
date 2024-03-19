@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { debounce } from "lodash";
-import { useEditor, EditorContent, BubbleMenu, Editor } from "@tiptap/react";
+import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
@@ -11,7 +11,6 @@ import va from "@vercel/analytics";
 import { toast } from "sonner";
 import { useCompletion } from "ai/react";
 
-import { Button } from "./ui/button";
 import SlashCommand from "./extensions/slash-command";
 import { getPrevText } from "@/lib/editor";
 
@@ -30,7 +29,8 @@ const TipTap = ({
 }: TipTapProps) => {
   const [hydrated, setHydrated] = useState(false);
 
-  const content = initialContent ? JSON.parse(initialContent) : undefined;
+  // No need to parse as JSON
+  const content = initialContent || '';
 
   const editor = useEditor({
     extensions: [
@@ -48,7 +48,7 @@ const TipTap = ({
       CharacterCount.configure({}),
       SlashCommand,
     ],
-    content: initialContent ? JSON.parse(initialContent) : undefined,
+    content: content,
     autofocus: "end", // the default cursor position is at the end of the text
     editable: isEditable,
     onUpdate: (e) => {

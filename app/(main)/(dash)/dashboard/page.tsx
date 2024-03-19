@@ -12,13 +12,16 @@ const DashboardPage = () => {
   const essays = useQuery(api.documents.getAllDocuments);
 
   // Transform the data to match the Essays type
-  const essaysData = essays?.map(doc => ({
-    taskType: doc.taskType,
-    title: doc.title,
-    _creationTime: new Date(doc._creationTime).toLocaleString(),  // conversion goes here
-    category: doc.category || '', // default to empty string if category is undefined
-    overallScore: doc.overallScore
-  })) || [];
+  const essaysData =
+    essays?.map((doc) => ({
+      id: doc._id,
+      taskType: doc.taskType,
+      title: doc.title,
+      content: doc.content || "",
+      _creationTime: new Date(doc._creationTime).toLocaleString(), // conversion goes here
+      category: doc.category || "", // default to empty string if category is undefined
+      overallScore: doc.overallScore,
+    })) || [];
 
   return (
     <section className="container max-w-6xl py-24 mx-auto space-y-4">
@@ -36,7 +39,7 @@ const DashboardPage = () => {
         <p className="text-xl">
           This is where the essay history table will go.
         </p>
-        <DataTable columns={columns} data={essaysData} />
+        <DataTable columns={columns} data={essaysData}/>
       </div>
       <div>
         <p className="text-xl">This is where the skills chart will go.</p>

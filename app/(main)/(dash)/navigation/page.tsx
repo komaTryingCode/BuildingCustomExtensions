@@ -27,6 +27,7 @@ const OverviewPage = () => {
                 const promise = create({
                   title: "Test Document Title",
                   category: "Test Category",
+                  taskType: "Task Two",
                 }).then((documentId) => router.push(`/editor/${documentId}`));
                 toast.promise(promise, {
                   loading: "Creating a new document...",

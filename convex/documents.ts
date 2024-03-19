@@ -70,6 +70,40 @@ export const update = mutation({
   },
 });
 
+// Delete document:
+export const deleteDocument = mutation({
+  args: {
+    id: v.optional(v.id("documents")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("You are not authorized to perform this action");
+    }
+
+    if (!args.id) {
+      throw new Error("Document ID is undefined");
+    }
+
+    const userId = identity.subject;
+
+    const existingEssay = await ctx.db.get(args.id);
+
+    if (!existingEssay) {
+      throw new Error("Essay not found");
+    }
+
+    if (existingEssay.userId !== userId) {
+      throw new Error("You are not authorized to perform this action");
+    }
+
+    const document = await ctx.db.delete(args.id);
+
+    return document;
+  },
+});
+
 export const getDocumentById = query({
   args: { documentId: v.id("documents") },
   handler: async (ctx, args) => {

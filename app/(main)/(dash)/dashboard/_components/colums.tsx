@@ -5,11 +5,15 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "./data-table-column-header";
+import { DataTableRowActions } from "./data-table-row-actions";
+import { Id } from "@/convex/_generated/dataModel";
 
 // This type is used to define the shape of our data.
 export type Essays = {
+  id: Id<"documents">;
   taskType: "Task One" | "Task Two";
   title: string;
+  content: string | undefined;
   _creationTime: string;
   category: string;
   overallScore: number | undefined;
@@ -51,9 +55,11 @@ export const columns: ColumnDef<Essays>[] = [
       return (
         <div className="flex space-x-2">
           {taskType && <Badge variant="outline">{taskType}</Badge>}
-          <span role="button" className="max-w-[500px] truncate font-medium hover:underline hover:cursor-pointer">
-            {row.getValue("title")}
-          </span>
+          <DataTableRowActions
+            row={row}
+            id={row.original.id}
+            content={row.original.content || ""}
+          />
         </div>
       );
     },

@@ -61,10 +61,11 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   // Function to manually save content
   const saveContent = () => {
     if (editorRef.current) {
-      const content = editorRef.current.getHTML();
+      // Use getText() to get plain text content
+      const content = editorRef.current.getText();
       const wordCount = countWords(content);
       if (wordCount >= 100) {
-        onConvexUpdate(JSON.stringify(content));
+        onConvexUpdate(content); // Pass plain text content to onConvexUpdate
         // Let's try AI assessment here
         if (document && document.title) {
           setIsLoading(true);

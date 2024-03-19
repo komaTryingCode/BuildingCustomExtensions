@@ -3,8 +3,11 @@ import {
   ChevronRightIcon,
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
+  TrashIcon,
 } from "@radix-ui/react-icons";
 import { Table } from "@tanstack/react-table";
+import { useMutation } from "convex/react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
@@ -22,12 +27,57 @@ interface DataTablePaginationProps<TData> {
 export function DataTablePagination<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
+  const deleteDocument = useMutation(api.documents.deleteDocument);
+
+  const selectedRowIds = table.getState().rowSelection;
+  const selectedRowCount = Object.keys(selectedRowIds).length;
+
+  // TODO: Fix the delete logic
+  // function handleDelete(id: Id<"documents">) {
+  //   deleteDocument({ id }).then(() => {
+  //     toast.success("The essay has been deleted!");
+  //   })
+  //   .catch((error) => {
+  //     console.error("Deletion error:", error);
+  //     toast.error("Failed to delete the essay");
+  //   });
+  // }
+
   return (
     <div className="flex items-center justify-between px-2">
-      <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex-1 flex items-center gap-4 text-sm text-muted-foreground">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected.
+        {/* <div>
+          {selectedRowCount === 1 && (
+            <Button
+              className="h-8 px-4"
+              onClick={() => {
+                // Assuming `selectedRowIds` contains the `id` as the key
+                const selectedId = Object.keys(selectedRowIds)[0];
+                handleDelete(selectedId as Id<"documents">);
+              }}
+            >
+              <TrashIcon className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          )}
+          {selectedRowCount > 1 && (
+            <Button
+              className="h-8 px-4"
+              onClick={() => {
+                Object.keys(selectedRowIds).forEach((selectedId) => {
+                  handleDelete(selectedId as Id<"documents">);
+                });
+              }}
+            >
+              <TrashIcon className="mr-2 h-4 w-4" />
+              Delete all
+            </Button>
+          )}
+        </div> */}
       </div>
+
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>
